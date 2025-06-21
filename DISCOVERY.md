@@ -1,115 +1,155 @@
 # DISCOVERY FOR BOWLING
 
-### 1. Roll
+## Feature: Score a Single Roll
 
-## Feature: Make a normal tour
+**Rule:** The score of a roll equals the number of pins knocked down
 
-Rule: The score is equal to the knocked down pins
+### Scenario: Player knocks down some pins
 
-Scenario: A player knocks 6 pins on a roll
+```
+Given a player rolls a bowling ball
+When 6 pins are knocked down
+Then the roll should score 6 points
+```
 
-    Given: A player roll a bowling ball and knocked down 6 pins
-    When: the score is calculated
-    Then: the score of the roll should be 6
+### Scenario: Player misses all pins
 
-Rule: A tour is a sequence of two rolls and the score of a tour is the sum of the two rolls
+```
+Given a player rolls a bowling ball
+When 0 pins are knocked down
+Then the roll should score 0 points
+```
 
-Scenario: A player plays a normal tour
+---
 
-    Given: A player rolls a first bowling ball and knocks down 6 pins
-    AND: the player rolls a second time and knocks down 2 pins
-    When: The score is calculated for the tour
-    Then: The tour has ended and the score of the tour should be 8
+## Feature: Score a Normal Frame
 
-Rule: A tour can be constituted of two missed rolls
+**Rule:** A normal frame score is the sum of two rolls when fewer than 10 pins total are knocked down
 
-Scenario: A player plays a tour with two missed rolls
+### Scenario: Player scores in two rolls
 
-    Given: A player rolls a first bowling ball and knocks down 0 pins
-    AND: the player rolls a second time and knocks down 0 pins
-    When: The score is calculated for the tour
-    Then: The tour has ended and the score of the tour should be 0
+```
+Given a player starts a new frame
+When the player knocks down 6 pins on the first roll
+And the player knocks down 2 pins on the second roll
+Then the frame should score 8 points
+And the frame should be complete
+```
 
-## Feature: Make a strike
+---
 
-Rule: A turn is over when all pins are knocked down
+## Feature: Score a Spare
 
-Scenario: A player plays a strike on its first roll
+**Rule:** A spare occurs when all 10 pins are knocked down in exactly two rolls
+**Rule:** A spare scores 10 points plus the next roll
 
-    Given: A player rolls a first bowling ball and knocks down 10 pins
-    When: The roll is finished
-    Then: The turn is over
+### Scenario: Player achieves a spare
 
-Rule: A strike score is addition of the next two rolls plus 10
+```
+Given a player starts a new frame
+When the player knocks down 6 pins on the first roll
+And the player knocks down 4 pins on the second roll
+Then the frame should be a spare
+And the frame score should be pending
+```
 
-Scenario: A player plays a strike on its first roll
+### Scenario: Calculate spare score with next roll
 
-    Given: A player rolls a first bowling ball and knocks down 10 pins
-    And: the player play a second tour and scores 7 pins
-    When: The score is calculated for the tour
-    Then: The score of the first tour should be 17
+```
+Given a player achieved a spare scoring 6 and 4 pins
+When the player's next roll knocks down 5 pins
+Then the spare frame should score 15 points
+```
 
-## Feature: Make a spare
+---
 
-Rule: A spare is when all pins are knocked down in two rolls
+## Feature: Score a Strike
 
-Scenario: A player plays a spare on its second roll
+**Rule:** A strike occurs when all 10 pins are knocked down on the first roll
+**Rule:** A strike scores 10 points plus the next two rolls
 
-    Given: A player rolls a first bowling ball and knocks down 6 pins
-    And: the player rolls a second bowling ball and knocks down 4 pins
-    When: The score is calculated for the tour
-    Then: The tour has ended and the score is pending the next roll
+### Scenario: Player achieves a strike
 
-Rule: A spare score is addition of the next roll plus 10
-Scenario: A player plays a spare on its second roll
+```
+Given a player starts a new frame
+When the player knocks down 10 pins on the first roll
+Then the frame should be a strike
+And the frame should be complete
+And the frame score should be pending
+```
 
-    Given: A player rolls a first bowling ball and knocks down 6 pins
-    And: the player rolls a second bowling ball and knocks down 4 pins
-    And: the player rolls a third bowling ball and knocks down 5 pins
-    When: The score is calculated for the tour
-    Then: The score of the first tour should be 15
+### Scenario: Calculate strike score with next two rolls
 
-## Feature: Full game
+```
+Given a player achieved a strike
+When the player's next two rolls knock down 4 and 3 pins respectively
+Then the strike frame should score 17 points
+```
 
-Rule: A game is a sequence of 10 tours
+---
 
-Scenario: A game is finished when the 10th tour is finished
+## Feature: Score the Tenth Frame
 
-    Given: A player who played 9 tours with a score of 8 for each tour
-    And: the player finishes is 10th tour with 6 pins down
-    When: The score is calculated for the game
-    Then: The game is finished and the score should be 78
+**Rule:** The tenth frame allows bonus rolls for strikes and spares
 
-Rule: When the 10th tour is a strike, the player has 2 additional rolls
+### Scenario: Normal tenth frame
 
-Scenario: A player plays a strike on its 10th tour
+```
+Given a player reaches the tenth frame with a score of 100
+When the player knocks down 6 pins on the first roll
+And the player knocks down 2 pins on the second roll
+Then the frame should score 8 points
+And the game should be complete with a total score of 108 points
+```
 
-    Given: A player who played 9 tours with a score of 8 for each tour
-    And: the player finishes is 10th tour with a strike
-    And: the player rolls a first bowling ball and knocks down 4 pins
-    And: the player rolls a second bowling ball and knocks down 2 pins
-    When: The score is calculated for the game
-    Then: The game is finished and the score should be 16 + 8 * 9 = 88
+### Scenario: Tenth frame spare
 
-Rule: When the 10th tour is a strike, the player has 1 additional roll if the first roll is a strike again
+```
+Given a player reaches the tenth frame with a score of 100
+When the player achieves a spare
+And the player knocks down 5 pins on the bonus roll
+Then the tenth frame should score 15 points
+And the game should be complete with a total score of 115 points
+```
 
-Scenario: A player plays a strike on its 10th tour and a strike on the first additional roll
+### Scenario: Tenth frame strike
 
-    Given: A player who played 9 tours with a score of 8 for each tour
-    And: the player finishes is 10th tour with a strike
-    And: the player rolls a first bowling ball and knocks down 10 pins
-    And: the player rolls a second bowling ball and knocks down 2 pins
-    When: The score is calculated for the game
-    Then: The game is finished and the score should be 20 + 8 * 9 = 92
+```
+Given a player reaches the tenth frame with a score of 100
+When the player achieves a strike
+And the player knocks down 4 pins on the first bonus roll
+And the player knocks down 3 pins on the second bonus roll
+Then the tenth frame should score 17 points
+And the game should be complete with a total score of 117 points
+```
 
-Rule: When the 10th tour is a spare, the player has 1 additional roll
+---
 
-Scenario: A player plays a spare on its 10th tour
+## Feature: Score a Complete Game
 
-    Given: A player who played 9 tours with a score of 8 for each tour
-    And: the player finishes is 10th tour with a spare
-    And: the player rolls a first bowling ball and knocks down 5 pins
-    When: The score is calculated for the game
-    Then: The game is finished and the score should be 15 + 8 * 9 = 87
+**Rule:** A game consists of exactly 10 frames
 
+### Scenario: Perfect game
 
+```
+Given a player bowls 12 consecutive strikes
+When the game is scored
+Then the total score should be 300 points
+```
+
+### Scenario: All gutters
+
+```
+Given a player misses all pins in all rolls
+When the game is scored
+Then the total score should be 0 points
+```
+
+### Scenario: All spares with 5 pins each time
+
+```
+Given a player achieves spares in all 10 frames by knocking down 5 pins then 5 pins
+And the player knocks down 5 pins on the bonus roll
+When the game is scored
+Then the total score should be 150 points
+```
