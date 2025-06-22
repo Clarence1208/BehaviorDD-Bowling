@@ -1,13 +1,15 @@
 package com.esgi.lac.bdd.bowling;
 
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.Optional;
 
 @NoArgsConstructor
 public class Frame {
 
     private Integer firstRoll = null;
     private Integer secondRoll = null;
+    private Integer bonusRoll = null;
 
     public void roll(int pins) {
         if (!isComplete()) {
@@ -21,31 +23,49 @@ public class Frame {
         }
     }
 
-    public int getScore() {
-        return firstRoll + secondRoll;
+    public void addBonusRoll(int pins) {
+        if (bonusRoll != null) {
+            throw new IllegalStateException("Bonus roll already exists. Cannot add another bonus roll.");
+        }
+
+        if (!isSpare()) {
+            throw new IllegalStateException("Bonus roll can only be added to a spare frame.");
+        }
+
+        bonusRoll = pins;
+    }
+
+    public int getCompleteScore() {
+        return firstRoll + secondRoll + Optional.ofNullable(bonusRoll).orElse(0);
     }
 
     public boolean isComplete() {
+        if (isSpare()) {
+            return bonusRoll != null;
+        }
+
         return firstRoll != null && secondRoll != null;
+    }
+
+    public boolean isSpare() {
+        return firstRoll != null
+            && secondRoll != null
+            && (firstRoll + secondRoll == 10);
     }
 
     public FrameScore getFrameScore() {
         if (isComplete()) {
-            return new FrameScore(getScore(), false);
+            return new FrameScore(getCompleteScore(), false);
         } else {
-            return new FrameScore(firstRoll, true);
+            return new FrameScore(
+                Optional.ofNullable(firstRoll).orElse(0) +
+                    Optional.ofNullable(secondRoll).orElse(0) +
+                    Optional.ofNullable(bonusRoll).orElse(0),
+                true
+            );
         }
     }
 
-@Getter
-public static class FrameScore {
-        private final int score;
-        private final boolean pending;
-
-        public FrameScore(int score, boolean pending) {
-            this.score = score;
-            this.pending = pending;
-        }
-
-}
+    public record FrameScore(int score, boolean pending) {
+    }
 }
