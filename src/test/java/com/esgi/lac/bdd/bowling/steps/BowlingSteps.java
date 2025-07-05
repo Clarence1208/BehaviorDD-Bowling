@@ -112,4 +112,40 @@ public class BowlingSteps {
         assertThat(currentFrame.isComplete()).isTrue();
         assertThat(currentFrame.getFrameScore().pending()).isFalse();
     }
+
+    // strike frame steps
+
+    @Then("the frame should be a strike")
+    public void the_frame_should_be_a_strike() {
+        assertThat(currentFrame.isStrike()).isTrue();
+    }
+
+    @Given("a player achieved a strike")
+    public void a_player_achieved_a_strike() {
+        game = new BowlingGame();
+        currentFrame = game.startNewFrame();
+        currentFrame.roll(10);
+        assertThat(currentFrame.isStrike()).isTrue();
+    }
+
+    @When("the player's next two rolls knock down {int} and {int} pins respectively")
+    public void the_players_next_two_rolls_knock_down_and_pins_respectively(int first, int second) {
+        nextFrame = game.startNewFrame();
+        nextFrame.roll(first);
+        nextFrame.roll(second);
+        currentFrame.addBonusRoll(first);
+        currentFrame.addBonusRoll(second);
+    }
+
+    @Then("the strike frame should score {int} points")
+    public void the_strike_frame_should_score_points(int expectedScore) {
+        assertThat(currentFrame.getCompleteScore()).isEqualTo(expectedScore);
+    }
+    @And("the frame score should be pending")
+    public void the_frame_score_should_be_pending() {
+        Frame.FrameScore frameScore = currentFrame.getFrameScore();
+        assertThat(frameScore.pending()).isTrue();
+    }
+
+
 }

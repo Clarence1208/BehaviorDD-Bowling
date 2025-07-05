@@ -10,6 +10,7 @@ public class Frame {
     private Integer firstRoll = null;
     private Integer secondRoll = null;
     private Integer bonusRoll = null;
+    private Integer secondBonusRoll = null;
 
     public void roll(int pins) {
         if (!isComplete()) {
@@ -24,26 +25,44 @@ public class Frame {
     }
 
     public void addBonusRoll(int pins) {
-        if (bonusRoll != null) {
-            throw new IllegalStateException("Bonus roll already exists. Cannot add another bonus roll.");
+        if (isStrike()) {
+            if (bonusRoll == null) {
+                bonusRoll = pins;
+            } else if (secondBonusRoll == null) {
+                secondBonusRoll = pins;
+            } else {
+                throw new IllegalStateException("Both bonus rolls already exist for strike.");
+            }
+        } else if (isSpare()) {
+            if (bonusRoll == null) {
+                bonusRoll = pins;
+            } else {
+                throw new IllegalStateException("Bonus roll already exists for spare.");
+            }
+        } else {
+            throw new IllegalStateException("Bonus roll can only be added to a spare or strike frame.");
         }
-
-        if (!isSpare()) {
-            throw new IllegalStateException("Bonus roll can only be added to a spare frame.");
-        }
-
-        bonusRoll = pins;
     }
 
     public int getCompleteScore() {
-        return firstRoll + secondRoll + Optional.ofNullable(bonusRoll).orElse(0);
+        if (isStrike()) {
+            return 10 +
+                    Optional.ofNullable(bonusRoll).orElse(0) +
+                    Optional.ofNullable(secondBonusRoll).orElse(0);
+        }
+
+        return Optional.ofNullable(firstRoll).orElse(0) +
+                Optional.ofNullable(secondRoll).orElse(0) +
+                Optional.ofNullable(bonusRoll).orElse(0);
     }
 
     public boolean isComplete() {
+        if (isStrike()) {
+            return true;
+        }
         if (isSpare()) {
             return bonusRoll != null;
         }
-
         return firstRoll != null && secondRoll != null;
     }
 
@@ -54,18 +73,28 @@ public class Frame {
     }
 
     public FrameScore getFrameScore() {
-        if (isComplete()) {
-            return new FrameScore(getCompleteScore(), false);
+        boolean pending = false;
+
+        if (isStrike()) {
+            pending = bonusRoll == null || secondBonusRoll == null;
+        } else if (isSpare()) {
+            pending = bonusRoll == null;
         } else {
-            return new FrameScore(
-                Optional.ofNullable(firstRoll).orElse(0) +
-                    Optional.ofNullable(secondRoll).orElse(0) +
-                    Optional.ofNullable(bonusRoll).orElse(0),
-                true
-            );
+            pending = secondRoll == null;
         }
+
+        int score = Optional.ofNullable(firstRoll).orElse(0)
+                + Optional.ofNullable(secondRoll).orElse(0)
+                + Optional.ofNullable(bonusRoll).orElse(0)
+                + Optional.ofNullable(secondBonusRoll).orElse(0);
+
+        return new FrameScore(score, pending);
     }
 
     public record FrameScore(int score, boolean pending) {
+    }
+
+    public boolean isStrike() {
+        return firstRoll != null && firstRoll == 10;
     }
 }
