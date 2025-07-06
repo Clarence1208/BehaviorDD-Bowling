@@ -201,7 +201,6 @@ public class BowlingSteps {
 
         @And("the player knocks down {int} pins on the bonus roll")
         public void the_player_knocks_down_pins_on_the_bonus_roll(int pins) {
-            currentFrame = game.getFrames().get(9);
             currentFrame.addBonusRoll(pins);
         }
 
@@ -260,9 +259,9 @@ public class BowlingSteps {
         }
 
         // 10th frame
-        Frame tenth = game.startNewFrame();
-        tenth.roll(5);
-        tenth.roll(5);
+        currentFrame = game.startNewFrame();
+        currentFrame.roll(5);
+        currentFrame.roll(5);
     }
 
     @When("the game is scored")
