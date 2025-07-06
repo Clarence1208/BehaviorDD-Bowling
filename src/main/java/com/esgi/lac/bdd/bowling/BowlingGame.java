@@ -20,7 +20,7 @@ public class BowlingGame {
             throw new IllegalStateException("Cannot start more than 10 frames.");
         }
 
-        Frame frame = (frames.size() == 9) ? new TenthFrame() : new Frame();
+        Frame frame = new Frame();
         frames.add(frame);
         return frame;
     }

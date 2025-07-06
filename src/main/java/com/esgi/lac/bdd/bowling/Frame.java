@@ -13,15 +13,15 @@ public class Frame {
     protected Integer secondBonusRoll = null;
 
     public void roll(int pins) {
-        if (!isComplete()) {
-            if (firstRoll == null) {
-                firstRoll = pins;
-                return;
-            }
-            secondRoll = pins;
-        } else {
+        if (isComplete()) {
             throw new IllegalStateException("Frame is already complete. Cannot roll more.");
         }
+
+        if (firstRoll == null) {
+            firstRoll = pins;
+            return;
+        }
+        secondRoll = pins;
     }
 
     public void addBonusRoll(int pins) {
@@ -45,15 +45,10 @@ public class Frame {
     }
 
     public int getCompleteScore() {
-        if (isStrike()) {
-            return 10 +
-                    Optional.ofNullable(bonusRoll).orElse(0) +
-                    Optional.ofNullable(secondBonusRoll).orElse(0);
-        }
-
         return Optional.ofNullable(firstRoll).orElse(0) +
-                Optional.ofNullable(secondRoll).orElse(0) +
-                Optional.ofNullable(bonusRoll).orElse(0);
+            Optional.ofNullable(secondRoll).orElse(0) +
+            Optional.ofNullable(bonusRoll).orElse(0) +
+            Optional.ofNullable(secondBonusRoll).orElse(0);
     }
 
     public boolean isComplete() {
@@ -61,7 +56,7 @@ public class Frame {
             return true;
         }
         if (isSpare()) {
-            return bonusRoll != null;
+            return true;
         }
         return firstRoll != null && secondRoll != null;
     }
@@ -73,22 +68,17 @@ public class Frame {
     }
 
     public FrameScore getFrameScore() {
-        boolean pending = false;
+        return new FrameScore(getCompleteScore(), isScorePending());
+    }
 
+    private boolean isScorePending() {
         if (isStrike()) {
-            pending = bonusRoll == null || secondBonusRoll == null;
-        } else if (isSpare()) {
-            pending = bonusRoll == null;
-        } else {
-            pending = secondRoll == null;
+            return bonusRoll == null || secondBonusRoll == null;
         }
-
-        int score = Optional.ofNullable(firstRoll).orElse(0)
-                + Optional.ofNullable(secondRoll).orElse(0)
-                + Optional.ofNullable(bonusRoll).orElse(0)
-                + Optional.ofNullable(secondBonusRoll).orElse(0);
-
-        return new FrameScore(score, pending);
+        if (isSpare()) {
+            return bonusRoll == null;
+        }
+        return firstRoll == null || secondRoll == null;
     }
 
     public record FrameScore(int score, boolean pending) {
