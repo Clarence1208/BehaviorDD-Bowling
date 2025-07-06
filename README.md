@@ -179,7 +179,7 @@ Scenario: Mixed game with various frame types
     | 8     | 6      | 3       | [empty] |
     | 9     | 7      | 2       | [empty] |
     | 10    | 10     | 5       | 3       |
-  Then the total score should be 131 points
+  Then the total score should be 160 points
 ```
 
 ## Architecture
