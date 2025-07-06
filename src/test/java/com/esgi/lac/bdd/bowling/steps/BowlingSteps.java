@@ -355,11 +355,6 @@ public class BowlingSteps {
                     frame.addBonusRoll(pins3);
                 }
             }
-            
-            if (frameNumber < 10) {
-                if (frame.isStrike() || frame.isSpare()) {
-                }
-            }
         }
         
         addBonusRollsForDataTableFrames();
@@ -432,7 +427,7 @@ public class BowlingSteps {
 
     @Then("the first frame should score {int} points")
     public void the_first_frame_should_score_points(int expectedScore) {
-        Frame firstFrame = game.getFrames().get(0);
+        Frame firstFrame = game.getFrames().getFirst();
         assertThat(firstFrame.getCompleteScore()).isEqualTo(expectedScore);
     }
 
@@ -486,7 +481,7 @@ public class BowlingSteps {
 
     @Then("the first strike frame should score {int} points")
     public void the_first_strike_frame_should_score_points(int expectedScore) {
-        Frame firstFrame = game.getFrames().get(0);
+        Frame firstFrame = game.getFrames().getFirst();
         assertThat(firstFrame.getCompleteScore()).isEqualTo(expectedScore);
     }
 
