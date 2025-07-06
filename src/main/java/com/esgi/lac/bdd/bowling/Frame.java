@@ -1,26 +1,42 @@
 package com.esgi.lac.bdd.bowling;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Optional;
 
+/**
+ * Represents a single frame in a Bowling game.
+ * A frame can have up to two rolls, and may include bonus rolls for strikes or spares.
+ */
+@Getter
 @NoArgsConstructor
 public class Frame {
 
-    protected Integer firstRoll = null;
-    protected Integer secondRoll = null;
-    protected Integer bonusRoll = null;
-    protected Integer secondBonusRoll = null;
+    private Integer firstRoll = null;
+    private Integer secondRoll = null;
+    private Integer bonusRoll = null;
+    private Integer secondBonusRoll = null;
 
     public void roll(int pins) {
         if (isComplete()) {
             throw new IllegalStateException("Frame is already complete. Cannot roll more.");
         }
 
+        if (pins < 0 || pins > 10) {
+            throw new IllegalArgumentException("Invalid pin count: " + pins + ". Must be between 0 and 10.");
+        }
+
         if (firstRoll == null) {
             firstRoll = pins;
             return;
         }
+
+        if (firstRoll + pins > 10) {
+            throw new IllegalArgumentException(
+                "Invalid pin count: " + pins + ". Total pins cannot exceed 10 in a frame.");
+        }
+
         secondRoll = pins;
     }
 
