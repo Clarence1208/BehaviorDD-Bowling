@@ -1,10 +1,13 @@
 package com.esgi.lac.bdd.bowling;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class BowlingGame {
 
+    @Getter
     private final List<Frame> frames = new ArrayList<>();
     private Frame currentFrame;
 
@@ -31,4 +34,5 @@ public class BowlingGame {
                 .mapToInt(f -> f.getFrameScore().score())
                 .sum();
     }
+
 }

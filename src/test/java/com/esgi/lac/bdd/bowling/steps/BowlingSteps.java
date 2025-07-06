@@ -154,42 +154,42 @@ public class BowlingSteps {
         Frame f1 = game.startNewFrame();
         f1.roll(5);
         f1.roll(5);
-        f1.addBonusRoll(6); // 15 pts
+        f1.addBonusRoll(6);
 
         Frame f2 = game.startNewFrame();
         f2.roll(5);
-        f2.roll(4); // 7 pts
+        f2.roll(4);
 
         Frame f3 = game.startNewFrame();
         f3.roll(6);
-        f3.roll(3); // 8 pts
+        f3.roll(3);
 
         Frame f4 = game.startNewFrame();
         f4.roll(7);
-        f4.roll(2); // 9 pts
+        f4.roll(2);
 
         Frame f5 = game.startNewFrame();
         f5.roll(10);
         f5.addBonusRoll(3);
-        f5.addBonusRoll(3); // 16 pts
+        f5.addBonusRoll(3);
 
         Frame f6 = game.startNewFrame();
         f6.roll(5);
-        f6.roll(4); // 7 pts
+        f6.roll(4);
 
         Frame f7 = game.startNewFrame();
         f7.roll(4);
         f7.roll(6);
-        f7.addBonusRoll(1); // 11 pts
+        f7.addBonusRoll(1);
 
         Frame f8 = game.startNewFrame();
         f8.roll(5);
         f8.roll(5);
-        f8.addBonusRoll(2); // 12 pts
+        f8.addBonusRoll(2);
 
         Frame f9 = game.startNewFrame();
         f9.roll(6);
-        f9.roll(3); // 9 pts
+        f9.roll(3);
 
 
         assertThat(game.getTotalScore()).isEqualTo(expectedScore);
@@ -199,8 +199,9 @@ public class BowlingSteps {
     }
 
 
-    @And("the player knocks down {int} pins on the bonus roll")
+        @And("the player knocks down {int} pins on the bonus roll")
         public void the_player_knocks_down_pins_on_the_bonus_roll(int pins) {
+            currentFrame = game.getFrames().get(9);
             currentFrame.addBonusRoll(pins);
         }
 
@@ -219,4 +220,59 @@ public class BowlingSteps {
             assertThat(game.isComplete()).isTrue();
             assertThat(game.getTotalScore()).isEqualTo(expectedTotalScore);
         }
+
+        //complete game steps
+        @Given("a player bowls 12 consecutive strikes")
+        public void a_player_bowls_12_consecutive_strikes() {
+            game = new BowlingGame();
+            for (int i = 0; i < 9; i++) {
+                Frame frame = game.startNewFrame();
+                frame.roll(10);
+                frame.addBonusRoll(10);
+                frame.addBonusRoll(10);
+            }
+
+            // Tenth frame
+            Frame tenth = game.startNewFrame();
+            tenth.roll(10); // first roll
+            tenth.addBonusRoll(10); // first bonus
+            tenth.addBonusRoll(10); // second bonus
+        }
+
+    @Given("a player misses all pins in all rolls")
+    public void a_player_misses_all_pins_in_all_rolls() {
+        game = new BowlingGame();
+        for (int i = 0; i < 10; i++) {
+            Frame frame = game.startNewFrame();
+            frame.roll(0);
+            frame.roll(0);
+        }
+    }
+
+    @Given("a player achieves spares in all 10 frames by knocking down 5 pins then 5 pins")
+    public void a_player_achieves_all_spares() {
+        game = new BowlingGame();
+        for (int i = 0; i < 9; i++) {
+            Frame frame = game.startNewFrame();
+            frame.roll(5);
+            frame.roll(5);
+            frame.addBonusRoll(5);
+        }
+
+        // 10th frame
+        Frame tenth = game.startNewFrame();
+        tenth.roll(5);
+        tenth.roll(5);
+    }
+
+    @When("the game is scored")
+    public void the_game_is_scored() {
+    }
+
+    @Then("the total score should be {int} points")
+    public void the_total_score_should_be_points(int expected) {
+        assertThat(game.isComplete()).isTrue();
+        assertThat(game.getTotalScore()).isEqualTo(expected);
+    }
+
 }
