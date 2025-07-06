@@ -5,11 +5,14 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a Bowling Game.
+ * This class manages the frames of the game, allows rolling pins, and calculates the total score.
+ */
 public class BowlingGame {
 
     @Getter
     private final List<Frame> frames = new ArrayList<>();
-    private Frame currentFrame;
 
     public int roll(int pins) {
         return pins;
@@ -34,5 +37,4 @@ public class BowlingGame {
                 .mapToInt(f -> f.getFrameScore().score())
                 .sum();
     }
-
 }

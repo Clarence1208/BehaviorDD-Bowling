@@ -6,6 +6,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.cucumber.datatable.DataTable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,6 +16,7 @@ public class BowlingSteps {
     private int rollScore;
     private Frame currentFrame;
     private Frame nextFrame;
+    private Exception lastException;
 
     /// basic roll steps
 
@@ -272,5 +274,240 @@ public class BowlingSteps {
     public void the_total_score_should_be_points(int expected) {
         assertThat(game.isComplete()).isTrue();
         assertThat(game.getTotalScore()).isEqualTo(expected);
+    }
+
+    // Error handling steps
+    @And("the player tries to knock down {int} pins on the second roll")
+    public void the_player_tries_to_knock_down_pins_on_the_second_roll(int pins) {
+        try {
+            currentFrame.roll(pins);
+        } catch (Exception e) {
+            this.lastException = e;
+        }
+    }
+
+    @Then("an error should be thrown")
+    public void an_error_should_be_thrown() {
+        assertThat(lastException).isNotNull();
+    }
+
+    @And("the error message should indicate invalid pin count")
+    public void the_error_message_should_indicate_invalid_pin_count() {
+        assertThat(lastException).isInstanceOf(IllegalArgumentException.class);
+        assertThat(lastException.getMessage()).contains("Invalid pin count");
+    }
+
+    @Then("trying to roll again should throw an error")
+    public void trying_to_roll_again_should_throw_an_error() {
+        try {
+            currentFrame.roll(1);
+            assertThat(false).as("Expected an exception to be thrown").isTrue();
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalStateException.class);
+        }
+    }
+
+    @Given("a player starts a new game")
+    public void a_player_starts_a_new_game() {
+        game = new BowlingGame();
+    }
+
+    @When("the player bowls the following sequence:")
+    public void the_player_bowls_the_following_sequence(DataTable dataTable) {
+        var frames = dataTable.asMaps(String.class, String.class);
+        
+        for (var frameData : frames) {
+            int frameNumber = Integer.parseInt(frameData.get("Frame"));
+            String roll1 = frameData.get("Roll 1");
+            String roll2 = frameData.get("Roll 2");
+            String roll3 = frameData.get("Roll 3");
+            
+            Frame frame = game.startNewFrame();
+            
+            if (roll1 != null && !roll1.equals("[empty]") && !roll1.isEmpty()) {
+                int pins1 = Integer.parseInt(roll1);
+                frame.roll(pins1);
+            }
+
+            final boolean bonusState = roll3 != null && !roll3.equals("[empty]") && !roll3.isEmpty();
+            if (frameNumber == 10) {
+                if (roll2 != null && !roll2.equals("[empty]") && !roll2.isEmpty()) {
+                    int pins2 = Integer.parseInt(roll2);
+                    if (frame.isStrike()) {
+                        frame.addBonusRoll(pins2);
+                    } else {
+                        frame.roll(pins2);
+                    }
+                }
+                
+                if (bonusState) {
+                    int pins3 = Integer.parseInt(roll3);
+                    frame.addBonusRoll(pins3);
+                }
+            } else {
+                if (roll2 != null && !roll2.equals("[empty]") && !roll2.isEmpty() && !frame.isStrike()) {
+                    int pins2 = Integer.parseInt(roll2);
+                    frame.roll(pins2);
+                }
+                
+                if (bonusState) {
+                    int pins3 = Integer.parseInt(roll3);
+                    frame.addBonusRoll(pins3);
+                }
+            }
+            
+            if (frameNumber < 10) {
+                if (frame.isStrike() || frame.isSpare()) {
+                }
+            }
+        }
+        
+        addBonusRollsForDataTableFrames();
+    }
+
+    private void addBonusRollsForDataTableFrames() {
+        var frames = game.getFrames();
+        for (int i = 0; i < Math.min(frames.size() - 1, 9); i++) {
+            Frame currentFrame = frames.get(i);
+            Frame nextFrame = frames.get(i + 1);
+            
+            if (currentFrame.isStrike()) {
+                if (currentFrame.getBonusRoll() == null) {
+                    currentFrame.addBonusRoll(nextFrame.getFirstRoll());
+                }
+                if (currentFrame.getSecondBonusRoll() == null) {
+                    if (nextFrame.isStrike() && i + 2 < frames.size()) {
+                        currentFrame.addBonusRoll(frames.get(i + 2).getFirstRoll());
+                    } else if (nextFrame.getSecondRoll() != null) {
+                        currentFrame.addBonusRoll(nextFrame.getSecondRoll());
+                    }
+                }
+            } else if (currentFrame.isSpare()) {
+                if (currentFrame.getBonusRoll() == null) {
+                    currentFrame.addBonusRoll(nextFrame.getFirstRoll());
+                }
+            }
+        }
+    }
+
+    @Then("the game should be complete")
+    public void the_game_should_be_complete() {
+        assertThat(game.isComplete()).isTrue();
+    }
+
+    @When("the player achieves a strike in the first frame")
+    public void the_player_achieves_a_strike_in_the_first_frame() {
+        Frame frame1 = game.startNewFrame();
+        frame1.roll(10);
+        assertThat(frame1.isStrike()).isTrue();
+    }
+
+    @When("the player achieves a spare in the second frame with {int} and {int} pins")
+    public void the_player_achieves_a_spare_in_the_second_frame_with_and_pins(int first, int second) {
+        Frame frame2 = game.startNewFrame();
+        frame2.roll(first);
+        frame2.roll(second);
+        assertThat(frame2.isSpare()).isTrue();
+    }
+
+    @When("the player knocks down {int} pins in the third frame")
+    public void the_player_knocks_down_pins_in_the_third_frame(int pins) {
+        Frame frame3 = game.startNewFrame();
+        frame3.roll(pins);
+        
+        if (game.getFrames().size() >= 2) {
+            Frame frame1 = game.getFrames().get(0);
+            Frame frame2 = game.getFrames().get(1);
+            
+            if (frame1.isStrike()) {
+                frame1.addBonusRoll(frame2.getFirstRoll());
+                frame1.addBonusRoll(frame2.getSecondRoll());
+            }
+            
+            if (frame2.isSpare()) {
+                frame2.addBonusRoll(frame3.getFirstRoll());
+            }
+        }
+    }
+
+    @Then("the first frame should score {int} points")
+    public void the_first_frame_should_score_points(int expectedScore) {
+        Frame firstFrame = game.getFrames().get(0);
+        assertThat(firstFrame.getCompleteScore()).isEqualTo(expectedScore);
+    }
+
+    @Then("the second frame should score {int} points")
+    public void the_second_frame_should_score_points(int expectedScore) {
+        Frame secondFrame = game.getFrames().get(1);
+        assertThat(secondFrame.getCompleteScore()).isEqualTo(expectedScore);
+    }
+
+    @Then("the third frame should score {int} points")
+    public void the_third_frame_should_score_points(int expectedScore) {
+        Frame thirdFrame = game.getFrames().get(2);
+        assertThat(thirdFrame.getCompleteScore()).isEqualTo(expectedScore);
+    }
+
+    @When("the player achieves three consecutive strikes")
+    public void the_player_achieves_three_consecutive_strikes() {
+        Frame frame1 = game.startNewFrame();
+        frame1.roll(10);
+        
+        Frame frame2 = game.startNewFrame();
+        frame2.roll(10);
+        
+        Frame frame3 = game.startNewFrame();
+        frame3.roll(10);
+        
+        assertThat(frame1.isStrike()).isTrue();
+        assertThat(frame2.isStrike()).isTrue();
+        assertThat(frame3.isStrike()).isTrue();
+    }
+
+    @When("the player's fourth roll knocks down {int} pins")
+    public void the_player_s_fourth_roll_knocks_down_pins(int pins) {
+        Frame frame4 = game.startNewFrame();
+        frame4.roll(pins);
+        
+        if (game.getFrames().size() >= 3) {
+            Frame frame1 = game.getFrames().get(0);
+            Frame frame2 = game.getFrames().get(1);
+            Frame frame3 = game.getFrames().get(2);
+            
+            frame1.addBonusRoll(10);
+            frame1.addBonusRoll(10);
+            
+            frame2.addBonusRoll(10);
+            frame2.addBonusRoll(pins);
+            
+            frame3.addBonusRoll(pins);
+        }
+    }
+
+    @Then("the first strike frame should score {int} points")
+    public void the_first_strike_frame_should_score_points(int expectedScore) {
+        Frame firstFrame = game.getFrames().get(0);
+        assertThat(firstFrame.getCompleteScore()).isEqualTo(expectedScore);
+    }
+
+    @Then("the second strike frame should score {int} points")
+    public void the_second_strike_frame_should_score_points(int expectedScore) {
+        Frame secondFrame = game.getFrames().get(1);
+        assertThat(secondFrame.getCompleteScore()).isEqualTo(expectedScore);
+    }
+
+    @Then("the third strike frame should score {int} points")
+    public void the_third_strike_frame_should_score_points(int expectedScore) {
+        Frame thirdFrame = game.getFrames().get(2);
+        assertThat(thirdFrame.getCompleteScore()).isEqualTo(expectedScore);
+    }
+
+    @When("the player's fifth roll knocks down {int} pins")
+    public void the_player_s_fifth_roll_knocks_down_pins(int pins) {
+        Frame frame4 = game.getFrames().get(3);
+        frame4.roll(pins);
+        
+        Frame frame3 = game.getFrames().get(2);
+        frame3.addBonusRoll(pins);
     }
 }
