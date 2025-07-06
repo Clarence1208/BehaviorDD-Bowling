@@ -7,10 +7,10 @@ import java.util.Optional;
 @NoArgsConstructor
 public class Frame {
 
-    private Integer firstRoll = null;
-    private Integer secondRoll = null;
-    private Integer bonusRoll = null;
-    private Integer secondBonusRoll = null;
+    protected Integer firstRoll = null;
+    protected Integer secondRoll = null;
+    protected Integer bonusRoll = null;
+    protected Integer secondBonusRoll = null;
 
     public void roll(int pins) {
         if (!isComplete()) {

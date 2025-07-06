@@ -146,6 +146,77 @@ public class BowlingSteps {
         Frame.FrameScore frameScore = currentFrame.getFrameScore();
         assertThat(frameScore.pending()).isTrue();
     }
+    //tenth frame steps
+    @Given("a player reaches the tenth frame with a score of {int}")
+    public void a_player_reaches_the_tenth_frame_with_a_score_of(int expectedScore) {
+        game = new BowlingGame();
+
+        Frame f1 = game.startNewFrame();
+        f1.roll(5);
+        f1.roll(5);
+        f1.addBonusRoll(6); // 15 pts
+
+        Frame f2 = game.startNewFrame();
+        f2.roll(5);
+        f2.roll(4); // 7 pts
+
+        Frame f3 = game.startNewFrame();
+        f3.roll(6);
+        f3.roll(3); // 8 pts
+
+        Frame f4 = game.startNewFrame();
+        f4.roll(7);
+        f4.roll(2); // 9 pts
+
+        Frame f5 = game.startNewFrame();
+        f5.roll(10);
+        f5.addBonusRoll(3);
+        f5.addBonusRoll(3); // 16 pts
+
+        Frame f6 = game.startNewFrame();
+        f6.roll(5);
+        f6.roll(4); // 7 pts
+
+        Frame f7 = game.startNewFrame();
+        f7.roll(4);
+        f7.roll(6);
+        f7.addBonusRoll(1); // 11 pts
+
+        Frame f8 = game.startNewFrame();
+        f8.roll(5);
+        f8.roll(5);
+        f8.addBonusRoll(2); // 12 pts
+
+        Frame f9 = game.startNewFrame();
+        f9.roll(6);
+        f9.roll(3); // 9 pts
 
 
+        assertThat(game.getTotalScore()).isEqualTo(expectedScore);
+
+        // Start the 10th frame
+        currentFrame = game.startNewFrame();
+    }
+
+
+    @And("the player knocks down {int} pins on the bonus roll")
+        public void the_player_knocks_down_pins_on_the_bonus_roll(int pins) {
+            currentFrame.addBonusRoll(pins);
+        }
+
+        @And("the player knocks down {int} pins on the first bonus roll")
+        public void the_player_knocks_down_pins_on_the_first_bonus_roll(int pins) {
+            currentFrame.addBonusRoll(pins);
+        }
+
+        @And("the player knocks down {int} pins on the second bonus roll")
+        public void the_player_knocks_down_pins_on_the_second_bonus_roll(int pins) {
+            currentFrame.addBonusRoll(pins);
+        }
+
+        @And("the game should be complete with a total score of {int} points")
+        public void the_game_should_be_complete_with_a_total_score_of(int expectedTotalScore) {
+            assertThat(game.isComplete()).isTrue();
+            assertThat(game.getTotalScore()).isEqualTo(expectedTotalScore);
+        }
 }
