@@ -17,3 +17,13 @@ Feature: Score a Complete Game
     And the player knocks down 5 pins on the bonus roll
     When the game is scored
     Then the total score should be 150 points
+
+  Scenario: Cannot roll in completed frame
+    Given a player has completed a frame
+    When the player tries to roll again in the same frame
+    Then an error should be thrown
+
+  Scenario: Cannot add bonus roll to normal frame
+    Given a player has a normal frame (not strike or spare)
+    When the player tries to add a bonus roll
+    Then an error should be thrown

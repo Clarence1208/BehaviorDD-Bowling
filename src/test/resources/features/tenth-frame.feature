@@ -25,3 +25,16 @@ Feature: Score the Tenth Frame
     And the player knocks down 3 pins on the second bonus roll
     Then the frame should score 17 points
     And the game should be complete with a total score of 117 points
+
+  Scenario: Tenth frame strike with no bonus rolls
+    Given a player reaches the tenth frame with a score of 100
+    When the player knocks down 10 pins on the first roll
+    Then the frame score should be pending
+    And the frame score should be pending
+
+  Scenario: Tenth frame spare with no bonus roll
+    Given a player reaches the tenth frame with a score of 100
+    When the player knocks down 5 pins on the first roll
+    And the player knocks down 5 pins on the second roll
+    Then the frame score should be pending
+    And the frame score should be pending

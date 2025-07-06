@@ -273,5 +273,4 @@ public class BowlingSteps {
         assertThat(game.isComplete()).isTrue();
         assertThat(game.getTotalScore()).isEqualTo(expected);
     }
-
 }
